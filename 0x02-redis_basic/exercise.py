@@ -2,7 +2,7 @@
 """This module defines the class Cache."""
 import redis
 from uuid import uuid4
-from typing import Union
+from typing import Union, Callable
 
 
 class Cache():
@@ -31,3 +31,27 @@ class Cache():
         self._redis.set(key, data)
 
         return key
+
+    def get(self, key: str, fn: Callable = None) -> Union[
+            str, bytes, int, float]:
+        """
+        This method converts the retured cached data back to the
+        desired format.
+        """
+
+        retrieved_data = self._redis.get(key)
+
+        if retrieved_data is not None and fn is not None:
+            retrieved_data = fn(retrieved_data)
+
+        return retrieved_data
+
+    def get_str(self, key: str) -> str:
+        """This method converts the returned cached data to string."""
+
+        return self.get(key, fn=str)
+
+    def get_int(self, key: str) -> int:
+        """This method converts the returned cached data to integer."""
+
+        return self.get(key, fn=int)
