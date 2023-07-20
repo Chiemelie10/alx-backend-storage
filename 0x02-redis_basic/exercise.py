@@ -3,6 +3,25 @@
 import redis
 from uuid import uuid4
 from typing import Union, Callable
+from functools import wraps
+
+
+def count_calls(method: Callable) -> Callable:
+    """
+    This function returns the wrapper function.
+    """
+    @wraps(method)
+    def wrapper_function(self, *args, **kwargs):
+        """
+        This wrapper function counts the number of times methods
+        of Cache class are called.
+        """
+        key = method.__qualname__
+        self._redis.incr(key)
+
+        return method(self, *args, **kwargs)
+
+    return wrapper_function
 
 
 class Cache():
@@ -21,6 +40,7 @@ class Cache():
         self._redis = redis.Redis()
         self._redis.flushdb()
 
+    @count_calls
     def store(self, data: Union[str, bytes, int, float]) -> str:
         """
         This method generates a random key using uuid. It stores the
@@ -32,7 +52,7 @@ class Cache():
 
         return key
 
-    def get(self, key: str, fn: Callable = None) -> Union[
+    def get(self, key: str, fn: Union[Callable, None] = None) -> Union[
             str, bytes, int, float]:
         """
         This method converts the retured cached data back to the
@@ -49,9 +69,11 @@ class Cache():
     def get_str(self, key: str) -> str:
         """This method converts the returned cached data to string."""
 
-        return self.get(key, fn=str)
+        retrieved_data = self.get(key, fn=str)
+        return retrieved_data
 
     def get_int(self, key: str) -> int:
         """This method converts the returned cached data to integer."""
 
-        return self.get(key, fn=int)
+        retrieved_data = self.get(key, fn=int)
+        return retrieved_data
