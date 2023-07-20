@@ -46,6 +46,7 @@ def call_history(method: Callable) -> Callable:
 
     return wrapper_function
 
+
 def replay(method: Callable) -> None:
     # sourcery skip: use-fstring-for-concatenation, use-fstring-for-formatting
     """
