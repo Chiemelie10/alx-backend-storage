@@ -7,9 +7,8 @@ from functools import wraps
 
 
 def count_calls(method: Callable) -> Callable:
-    """
-    This function returns the wrapper function.
-    """
+    """This function returns the wrapper function."""
+
     @wraps(method)
     def wrapper_function(self, *args, **kwargs):
         """
@@ -20,6 +19,30 @@ def count_calls(method: Callable) -> Callable:
         self._redis.incr(key)
 
         return method(self, *args, **kwargs)
+
+    return wrapper_function
+
+
+def call_history(method: Callable) -> Callable:
+    """This function returns a wrapper function."""
+
+    @wraps(method)
+    def wrapper_function(self, *args, **kwargs):
+        """
+        This function stores the history of inputs and outputs
+        for a particular function.
+        """
+
+        input_key = method.__qualname__ + ":inputs"
+        output_key = method.__qualname__ + ":outputs"
+
+        self._redis.rpush(input_key, str(args))
+
+        output = method(self, *args, **kwargs)
+
+        self._redis.rpush(output_key, str(output))
+
+        return output
 
     return wrapper_function
 
@@ -40,6 +63,7 @@ class Cache():
         self._redis = redis.Redis()
         self._redis.flushdb()
 
+    @call_history
     @count_calls
     def store(self, data: Union[str, bytes, int, float]) -> str:
         """
