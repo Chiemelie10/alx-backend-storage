@@ -6,11 +6,11 @@ import requests
 from typing import Callable
 from functools import wraps
 
+redis_client = redis.Redis()
+
 
 def requests_count(fn: Callable) -> Callable:
     """This function returns a wrapper function."""
-
-    redis_client = redis.Redis()
 
     @wraps(fn)
     def wrapper_function(url):
